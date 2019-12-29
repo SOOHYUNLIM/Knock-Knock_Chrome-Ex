@@ -54,10 +54,6 @@ public class Member extends BaseTimeEntity {
     @CollectionTable(name = "tbl_Interest", joinColumns = @JoinColumn(name="mid"))
     private List<Interest> interests;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "tbl_Wanted", joinColumns = @JoinColumn(name="mid"))
-    private List<Wanted> wanteds;
-
     public Member update(String sex, String ageGroup){
         this.sex = sex;
         this.ageGroup = ageGroup;

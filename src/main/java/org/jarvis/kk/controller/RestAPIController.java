@@ -1,5 +1,8 @@
 package org.jarvis.kk.controller;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -8,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
@@ -17,6 +21,7 @@ import org.jarvis.kk.domain.ClickHistory;
 import org.jarvis.kk.domain.CommunityCrawling;
 import org.jarvis.kk.domain.ExecuteHistory;
 import org.jarvis.kk.domain.Member;
+import org.jarvis.kk.domain.Pick;
 import org.jarvis.kk.domain.Token;
 import org.jarvis.kk.dto.Category;
 import org.jarvis.kk.dto.SessionMember;
@@ -24,11 +29,13 @@ import org.jarvis.kk.repositories.CategoryDTORepository;
 import org.jarvis.kk.repositories.ClickHistoryRepository;
 import org.jarvis.kk.repositories.CommunityCrawlingRepository;
 import org.jarvis.kk.repositories.ExecuteHistoryRepository;
+import org.jarvis.kk.repositories.MarketRepository;
 import org.jarvis.kk.repositories.MemberRepository;
 import org.jarvis.kk.repositories.TokenRepository;
 import org.jarvis.kk.service.FCMService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,13 +63,14 @@ public class RestAPIController {
 
     private final TokenRepository tokenRepository;
 
-    private final CategoryDTORepository categoryDTORepository;
-
     private final CommunityCrawlingRepository communityCrawlingRepository;
 
     private final ClickHistoryRepository clickHistoryRepository;
 
     private final ExecuteHistoryRepository executeHistoryRepository;
+
+    private final CategoryDTORepository categoryDTORepository;
+    private final MarketRepository marketRepository;
 
     private final FCMService fcmService;
 
@@ -69,15 +78,59 @@ public class RestAPIController {
 
     private List<Category> categories;
 
+    private Set<String> markets;
+
     @PostConstruct
     public void init() {
         this.categories = categoryDTORepository.findAll();
+        this.markets = marketRepository.findAll().stream().map(market -> market.getUrlTitle())
+                .collect(Collectors.toSet());
+    }
+
+    private Object callCheckingLambda(String url) {
+        RestTemplate template = new RestTemplate();
+        template.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+
+        Object response = template.getForObject(
+                "https://773hnhyh4j.execute-api.ap-northeast-2.amazonaws.com/Knock-Knock/check/" + url, Object.class);
+        return response;
     }
 
     @GetMapping("/logout")
-    public void logout(){
-        //토큰 레파지토리에서 where delete
+    public void logout() {
+        // 토큰 레파지토리에서 where delete
         log.info("=============================");
+    }
+
+    @PostMapping("/pick")
+    public Integer pick(@RequestBody Pick pick){
+        log.info(pick.getWantedPrice()+"");
+        return null;
+    }
+
+    @GetMapping("/navershopping")
+    public ResponseEntity<Object> checkNaver(@RequestParam String title) {
+        RestTemplate template = new RestTemplate();
+        template.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+
+        Object response = template.getForObject(
+                "https://773hnhyh4j.execute-api.ap-northeast-2.amazonaws.com/Knock-Knock/navershopping/" + title,
+                Object.class);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/check")
+    public ResponseEntity<Object> checkUrl(@RequestParam String url) {
+        String decodeUrl = null;
+        try {
+            decodeUrl = URLDecoder.decode(url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return markets.contains(decodeUrl.split("\\.")[1])
+                ? new ResponseEntity<>(callCheckingLambda(url), HttpStatus.OK)
+                : new ResponseEntity<>("FAIL", HttpStatus.NO_CONTENT);
     }
 
     @Transactional
@@ -94,7 +147,8 @@ public class RestAPIController {
         SessionMember member = (SessionMember) session.getAttribute("member");
         // log.info("=============================");
         // log.info(member.isExistInterest()+"");
-        // return member.isExistInterest() ? HttpStatus.OK.value() : HttpStatus.MOVED_PERMANENTLY.value();
+        // return member.isExistInterest() ? HttpStatus.OK.value() :
+        // HttpStatus.MOVED_PERMANENTLY.value();
         return 200;
     }
 
@@ -127,13 +181,13 @@ public class RestAPIController {
         Map<String, List<CommunityCrawling>> codeToData = new HashMap<>();
         this.categories.forEach(category -> codeToData.put(category.getCode(), new ArrayList<>()));
         Set<String> totalCode = codeToData.keySet();
-        
+
         communityCrawlingRepository.findByRegdateBetweenOrderByNoDesc(from, to).forEach(data -> {
             if (data.isLastCrawling() && codeToData.values().stream().mapToInt(list -> list.size()).sum() > 20)
                 return;
-                codeToData.get(data.getProduct().getCategory()).add(data);
+            codeToData.get(data.getProduct().getCategory()).add(data);
         });
-        
+
         totalInterest.forEach(code -> {
             result.addAll(codeToData.get(code));
             totalCode.remove(code);
