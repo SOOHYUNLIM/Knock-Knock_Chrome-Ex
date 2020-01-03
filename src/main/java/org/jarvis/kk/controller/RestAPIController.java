@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,13 +32,16 @@ import org.jarvis.kk.repositories.CommunityCrawlingRepository;
 import org.jarvis.kk.repositories.ExecuteHistoryRepository;
 import org.jarvis.kk.repositories.MarketRepository;
 import org.jarvis.kk.repositories.MemberRepository;
+import org.jarvis.kk.repositories.PickRepository;
 import org.jarvis.kk.repositories.TokenRepository;
 import org.jarvis.kk.service.FCMService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -69,6 +73,8 @@ public class RestAPIController {
 
     private final ExecuteHistoryRepository executeHistoryRepository;
 
+    private final PickRepository pickRepository;
+
     private final CategoryDTORepository categoryDTORepository;
     private final MarketRepository marketRepository;
 
@@ -87,29 +93,50 @@ public class RestAPIController {
                 .collect(Collectors.toSet());
     }
 
-    private Object callCheckingLambda(String url) {
+    private Map<String, String> callCheckingLambda(String url) {
         RestTemplate template = new RestTemplate();
         template.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
 
-        Object response = template.getForObject(
-                "https://773hnhyh4j.execute-api.ap-northeast-2.amazonaws.com/Knock-Knock/check/" + url, Object.class);
+        Map<String, String> response = template.getForObject(
+                "https://773hnhyh4j.execute-api.ap-northeast-2.amazonaws.com/Knock-Knock/check/" + url,
+                LinkedHashMap.class);
+
         return response;
     }
 
-    @GetMapping("/logout")
-    public void logout() {
-        // 토큰 레파지토리에서 where delete
-        log.info("=============================");
+    @DeleteMapping("/dropPick/{pno}")
+    public Integer deletePick(@PathVariable Integer pno) {
+        pickRepository.save(pickRepository.getOne(pno).updateReceipt(false));
+        return HttpStatus.NO_CONTENT.value();
+    }
+
+    @GetMapping("/pickList")
+    public ResponseEntity<List<Pick>> pickList() {
+        SessionMember member = (SessionMember) session.getAttribute("member");
+        List<Pick> pickList = pickRepository.getPickList(memberRepository.getOne(member.getMid()));
+        pickList = pickList.stream()
+                .map(pick -> Pick.builder().pno(pick.getPno()).product(
+                        pick.getLowPrices().size() == 0 ? pick.getProduct() : pick.getLowPrices().get(0).getProduct())
+                        .build())
+                .collect(Collectors.toList());
+
+        return new ResponseEntity<>(pickList, HttpStatus.OK);
     }
 
     @PostMapping("/pick")
-    public Integer pick(@RequestBody Pick pick){
-        log.info(pick.getWantedPrice()+"");
-        return null;
+    public Integer pick(@RequestBody Pick pick) {
+        SessionMember member = (SessionMember) session.getAttribute("member");
+        pick.setMember(memberRepository.getOne(member.getMid()));
+        Integer result = HttpStatus.RESET_CONTENT.value();
+        if (!pickRepository.duplicationCheck(pick).isPresent()) {
+            pickRepository.save(pick);
+            result = HttpStatus.CREATED.value();
+        }
+        return result;
     }
 
-    @GetMapping("/navershopping")
-    public ResponseEntity<Object> checkNaver(@RequestParam String title) {
+    @GetMapping("/navershopping/{title}")
+    public ResponseEntity<Object> checkNaver(@PathVariable String title) {
         RestTemplate template = new RestTemplate();
         template.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
 
@@ -121,16 +148,24 @@ public class RestAPIController {
     }
 
     @GetMapping("/check")
-    public ResponseEntity<Object> checkUrl(@RequestParam String url) {
+    public ResponseEntity<Map<String, String>> checkUrl(@RequestParam String url) {
         String decodeUrl = null;
+        String mall = "";
         try {
             decodeUrl = URLDecoder.decode(url, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            mall = decodeUrl.split("\\.")[1];
+        } catch (UnsupportedEncodingException | ArrayIndexOutOfBoundsException e) {
         }
-        return markets.contains(decodeUrl.split("\\.")[1])
-                ? new ResponseEntity<>(callCheckingLambda(url), HttpStatus.OK)
-                : new ResponseEntity<>("FAIL", HttpStatus.NO_CONTENT);
+
+        Map<String, String> result = null;
+        HttpStatus status = HttpStatus.NO_CONTENT;
+        if (markets.contains(mall)) {
+            result = callCheckingLambda(url);
+            if (!result.get("title").equals(HttpStatus.NO_CONTENT.getReasonPhrase()))
+                status = HttpStatus.OK;
+        }
+
+        return new ResponseEntity<>(result, status);
     }
 
     @Transactional
@@ -145,15 +180,12 @@ public class RestAPIController {
     @GetMapping("/interestChecking")
     public Integer interestChecking() {
         SessionMember member = (SessionMember) session.getAttribute("member");
-        // log.info("=============================");
-        // log.info(member.isExistInterest()+"");
-        // return member.isExistInterest() ? HttpStatus.OK.value() :
-        // HttpStatus.MOVED_PERMANENTLY.value();
-        return 200;
+        return member.isExistInterest() ? HttpStatus.OK.value() : HttpStatus.MOVED_PERMANENTLY.value();
     }
 
     @PostMapping("/token")
     public ResponseEntity<String> registerToken(@RequestBody String token) {
+        log.info(token);
         SessionMember member = (SessionMember) session.getAttribute("member");
         fcmService.addAllTopics(token);
         tokenRepository.save(Token.builder().token(token).mid(member.getMid()).build());
@@ -164,7 +196,7 @@ public class RestAPIController {
     @GetMapping("/list")
     public ResponseEntity<List<CommunityCrawling>> getList() {
         SessionMember member = (SessionMember) session.getAttribute("member");
-        Member realMember = memberRepository.getOne(member.getMid());
+        Member realMember = memberRepository.findByMIdToInterest(member.getMid()).get();
         List<String> totalInterest = new ArrayList<>();
         List<String> analysisData = clickHistoryRepository.groupByCategoryCount(realMember);
         realMember.getInterests().forEach(interest -> {
@@ -181,7 +213,6 @@ public class RestAPIController {
         Map<String, List<CommunityCrawling>> codeToData = new HashMap<>();
         this.categories.forEach(category -> codeToData.put(category.getCode(), new ArrayList<>()));
         Set<String> totalCode = codeToData.keySet();
-
         communityCrawlingRepository.findByRegdateBetweenOrderByNoDesc(from, to).forEach(data -> {
             if (data.isLastCrawling() && codeToData.values().stream().mapToInt(list -> list.size()).sum() > 20)
                 return;
@@ -208,5 +239,21 @@ public class RestAPIController {
     @GetMapping("/msg")
     public void pushAllFcm() {
         fcmService.pushAllFcm();
+    }
+
+    @GetMapping("/lprice")
+    public void pushLprice() {
+        pickRepository.getAllPickList()
+                .forEach(pick -> fcmService.pushOneFcm(
+                        Pick.builder().pno(pick.getPno())
+                                .product(pick.getLowPrices().size() == 0 ? pick.getProduct()
+                                        : pick.getLowPrices().get(0).getProduct())
+                                .build(),
+                        pick.getMember().getTokens()));
+    }
+
+    @GetMapping("/moveMsg/{pno}")
+    public void moveMsg(@PathVariable Integer pno) {
+        pickRepository.save(pickRepository.getOne(pno).updateReceipt(false));
     }
 }

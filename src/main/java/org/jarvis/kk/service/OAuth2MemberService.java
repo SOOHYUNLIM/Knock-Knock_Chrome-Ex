@@ -3,7 +3,6 @@ package org.jarvis.kk.service;
 import java.util.Collections;
 
 import javax.servlet.http.HttpSession;
-import javax.transaction.Transactional;
 
 import org.jarvis.kk.domain.Member;
 import org.jarvis.kk.dto.OAuth2Attributes;
@@ -19,14 +18,12 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * OAuth2MemberService
  */
 @RequiredArgsConstructor
 @Service
-@Slf4j
 public class OAuth2MemberService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final MemberRepository memberRepository;
@@ -52,7 +49,8 @@ public class OAuth2MemberService implements OAuth2UserService<OAuth2UserRequest,
 
     private Member saveOrUpdate(OAuth2Attributes attributes) {
         Member member = memberRepository.findByMIdToInterest(attributes.getMid()).map(entity->entity.update(attributes.getSex(), attributes.getAgeGroup())).orElse(attributes.toEntity());
-        // Member member = Member.builder().mid(attributes.getMid()).sex("남").ageGroup("20대").role(Role.MEMBER).tokens(new ArrayList<>()).wanteds(new ArrayList<>()).interests(new ArrayList<>()).build();
-        return memberRepository.save(member);
+        //쿼리 수정 필요
+        memberRepository.save(member);
+        return member;
     }
 }

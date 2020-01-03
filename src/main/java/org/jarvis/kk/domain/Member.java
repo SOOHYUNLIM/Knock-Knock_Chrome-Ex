@@ -68,8 +68,5 @@ public class Member extends BaseTimeEntity {
         return this;
     }
 
-    public Member setTest(List<Interest> interests) {
-        this.interests = interests;
-        return this;
-    }
+    
 }

@@ -3,6 +3,7 @@ package org.jarvis.kk.repositories;
 import java.util.Optional;
 
 import org.jarvis.kk.domain.Member;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -12,6 +13,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface MemberRepository extends JpaRepository<Member, String> {
 
 
-    @Query("select m from Member m left join m.interests i where m.mid = :mid")
+    @EntityGraph(attributePaths = "interests")
+    @Query("select m from Member m where m.mid = :mid")
     public Optional<Member> findByMIdToInterest(String mid);
 }
