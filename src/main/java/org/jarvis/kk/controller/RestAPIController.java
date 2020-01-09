@@ -56,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * RestController
  */
-@CrossOrigin
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/kk")
 @RequiredArgsConstructor
