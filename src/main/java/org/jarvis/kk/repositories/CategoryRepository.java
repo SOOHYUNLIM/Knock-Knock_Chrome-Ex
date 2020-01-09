@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 /**
  * CategoryDTORepository
  */
-public interface CategoryDTORepository extends JpaRepository<Category, String> {
+public interface CategoryRepository extends JpaRepository<Category, String> {
 
     
 }

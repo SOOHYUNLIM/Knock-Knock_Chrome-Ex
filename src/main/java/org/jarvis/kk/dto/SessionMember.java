@@ -1,7 +1,9 @@
 package org.jarvis.kk.dto;
 
 import java.io.Serializable;
+import java.util.List;
 
+import org.jarvis.kk.domain.Interest;
 import org.jarvis.kk.domain.Member;
 
 import lombok.Getter;
@@ -20,6 +22,7 @@ public class SessionMember implements Serializable{
 
     public SessionMember(Member member){
         this.mid = member.getMid();
-        this.existInterest = member.getInterests().size() == 0 ? false : true;
+        List<Interest> interests = member.getInterests();
+        this.existInterest = interests == null ? false : (interests.size() == 0 ? false : true);
     }
 }

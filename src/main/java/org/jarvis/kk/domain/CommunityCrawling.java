@@ -1,5 +1,8 @@
 package org.jarvis.kk.domain;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,7 +20,7 @@ import lombok.Getter;
  */
 @Getter
 @Entity
-@Table(name="tbl_CommunityCrawling")
+@Table(name = "tbl_CommunityCrawling")
 public class CommunityCrawling extends BaseTimeEntity {
 
     @Id

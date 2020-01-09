@@ -3,6 +3,7 @@ package org.jarvis.kk.domain;
 import java.util.List;
 
 import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -14,6 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.OrderBy;
@@ -48,14 +50,19 @@ public class Pick extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
+    @Column(columnDefinition = "bit default 0")
     private Boolean state;
 
     @Column(insertable = false, columnDefinition = "bit default 1")
     private Boolean receipt;
 
-    @OrderBy(clause = "regdate desc")
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "tbl_lowprice", joinColumns = @JoinColumn(name = "pno"))
+    // @OrderBy(clause = "regdate desc")
+    // @ElementCollection(fetch = FetchType.LAZY)
+    // @CollectionTable(name = "tbl_lowprice", joinColumns = @JoinColumn(name = "pno"))
+    // private List<LowPrice> lowPrices;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pno")
     private List<LowPrice> lowPrices;
 
     @Builder

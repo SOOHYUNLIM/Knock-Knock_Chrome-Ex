@@ -26,7 +26,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable().exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint)
         .and().headers().frameOptions().disable()
         .and().authorizeRequests()
-        .antMatchers("/kk/msg", "/kk/lprice", "/admin/**").permitAll()
+        .antMatchers("/kk/msg", "/kk/lprice","/", "/admin/**").permitAll()
         .anyRequest().authenticated()
         .and().logout().logoutSuccessUrl("/kk/dropToken").logoutSuccessHandler(restAuthenticationLogoutSuccessHandler).logoutUrl("/kk/logout").invalidateHttpSession(true).permitAll()
         .and().oauth2Login().successHandler(restAuthenticationLoginSuccessHandler).userInfoEndpoint().userService(oauth2MemberService);

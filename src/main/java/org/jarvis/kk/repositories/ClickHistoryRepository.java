@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
  */
 public interface ClickHistoryRepository extends JpaRepository<ClickHistory, Integer> {
 
-    @Query("select c.product.category from ClickHistory h left join h.communityCrawling c where h.member = :member group by c.product.category order by count(h) desc")
-    public List<String> groupByCategoryCount(Member member);   
+    @Query("select c.product.category.code from ClickHistory h left join h.communityCrawling c where h.member = :member group by c.product.category order by count(h) desc")
+    public List<String> groupByCategoryCount(Member member);
+
 }

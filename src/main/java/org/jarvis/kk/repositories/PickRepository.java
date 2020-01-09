@@ -25,4 +25,5 @@ public interface PickRepository extends JpaRepository<Pick, Integer>{
 
     @Query("select p from Pick p where p.member = :#{#pick.member} and p.receipt = true and p.product.title = :#{#pick.product.title}")
     public Optional<Pick> duplicationCheck(@Param("pick") Pick pick);
+
 }

@@ -30,5 +30,5 @@ build/
 ### VS Code ###
 .vscode/
 
-application-oauth.properties
-application-real-db.properties
+# application-oauth.properties
+# application-real-db.properties

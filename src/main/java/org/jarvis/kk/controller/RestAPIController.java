@@ -26,7 +26,7 @@ import org.jarvis.kk.domain.Pick;
 import org.jarvis.kk.domain.Token;
 import org.jarvis.kk.dto.Category;
 import org.jarvis.kk.dto.SessionMember;
-import org.jarvis.kk.repositories.CategoryDTORepository;
+import org.jarvis.kk.repositories.CategoryRepository;
 import org.jarvis.kk.repositories.ClickHistoryRepository;
 import org.jarvis.kk.repositories.CommunityCrawlingRepository;
 import org.jarvis.kk.repositories.ExecuteHistoryRepository;
@@ -75,7 +75,7 @@ public class RestAPIController {
 
     private final PickRepository pickRepository;
 
-    private final CategoryDTORepository categoryDTORepository;
+    private final CategoryRepository categoryRepository;
     private final MarketRepository marketRepository;
 
     private final FCMService fcmService;
@@ -88,7 +88,7 @@ public class RestAPIController {
 
     @PostConstruct
     public void init() {
-        this.categories = categoryDTORepository.findAll();
+        this.categories = categoryRepository.findAll();
         this.markets = marketRepository.findAll().stream().map(market -> market.getUrlTitle())
                 .collect(Collectors.toSet());
     }
@@ -168,6 +168,16 @@ public class RestAPIController {
         return new ResponseEntity<>(result, status);
     }
 
+    @GetMapping("/getInterestList")
+    public ResponseEntity< Map<String, List<Object>>> getInterestList() {
+        Map<String, List<Object>> result = new HashMap<>();
+        SessionMember member = (SessionMember) session.getAttribute("member");
+        Member realMember = memberRepository.findByMIdToInterest(member.getMid()).get();
+        result.put("categoryList", categories.stream().map(category->(Object)category).collect(Collectors.toList()));
+        result.put("interests", realMember.getInterests().stream().map(interest->(Object)interest.getKeyword()).collect(Collectors.toList()));
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
     @Transactional
     @PutMapping("/updateInterest")
     public Integer updateInterest(@RequestBody String[] interests) {
@@ -216,7 +226,7 @@ public class RestAPIController {
         communityCrawlingRepository.findByRegdateBetweenOrderByNoDesc(from, to).forEach(data -> {
             if (data.isLastCrawling() && codeToData.values().stream().mapToInt(list -> list.size()).sum() > 20)
                 return;
-            codeToData.get(data.getProduct().getCategory()).add(data);
+            codeToData.get(data.getProduct().getCategory().getCode()).add(data);
         });
 
         totalInterest.forEach(code -> {

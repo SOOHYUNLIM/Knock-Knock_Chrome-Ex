@@ -8,5 +8,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface ExecuteHistoryRepository extends JpaRepository<ExecuteHistory, Integer> {
 
-    
 }

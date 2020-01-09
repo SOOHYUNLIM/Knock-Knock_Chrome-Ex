@@ -40,8 +40,8 @@ public class OAuth2Attributes {
     private static OAuth2Attributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
         return OAuth2Attributes.builder()
             .mid((String) attributes.get("email"))
-            .sex((String) attributes.get("email"))
-            .ageGroup((String) attributes.get("picture"))
+            .sex("W")
+            .ageGroup("30-39")
             .attributes(attributes)
             .nameAttributeKey(userNameAttributeName)
             .build();
@@ -80,7 +80,7 @@ public class OAuth2Attributes {
 
     public Member toEntity(){
         return Member.builder().mid(mid)
-        // .sex(sex).ageGroup(ageGroup)
+        .sex(sex).ageGroup(ageGroup)
         .role(Role.MEMBER).build();
     }
     
