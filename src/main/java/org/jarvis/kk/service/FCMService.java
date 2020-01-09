@@ -34,7 +34,7 @@ public final class FCMService {
         try {
             // C:/Users/SH/FireBaseDB/serviceAccountKey.json
             /// home/ec2-user/app/serviceAccountKey.json
-            FileInputStream serviceAccount = new FileInputStream("C:/Users/SH/FireBaseDB/serviceAccountKey.json");
+            FileInputStream serviceAccount = new FileInputStream("home/ec2-user/app/serviceAccountKey.json");
             FirebaseOptions options = new FirebaseOptions.Builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .setDatabaseUrl("https://jarvis-77f82.firebaseio.com").build();
