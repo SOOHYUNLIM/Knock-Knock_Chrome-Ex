@@ -16,10 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PickRepositoryTests {
 
-    @Autowired
-    private PickRepository pickRepository;
-    @Autowired
-    private MemberRepository memberRepository;
+    // @Autowired
+    // private PickRepository pickRepository;
+    // @Autowired
+    // private MemberRepository memberRepository;
 
     @Test
     public void test(){
