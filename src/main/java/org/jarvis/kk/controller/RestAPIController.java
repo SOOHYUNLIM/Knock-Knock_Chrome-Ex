@@ -196,6 +196,8 @@ public class RestAPIController {
     @PostMapping("/token")
     public ResponseEntity<String> registerToken(@RequestBody String token) {
         log.info(token);
+        log.info(session.getId());
+        log.info(session.getSessionContext().toString());
         SessionMember member = (SessionMember) session.getAttribute("member");
         fcmService.addAllTopics(token);
         tokenRepository.save(Token.builder().token(token).mid(member.getMid()).build());

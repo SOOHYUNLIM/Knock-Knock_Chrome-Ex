@@ -18,12 +18,14 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * OAuth2MemberService
  */
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class OAuth2MemberService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final MemberRepository memberRepository;
@@ -42,7 +44,10 @@ public class OAuth2MemberService implements OAuth2UserService<OAuth2UserRequest,
         Member member = saveOrUpdate(attributes);
 
         httpSession.setAttribute("member", new SessionMember(member));
-
+        log.info("==================로그인 시 등록되는 세션===========");
+        log.info(httpSession.getId());
+        log.info(httpSession.getSessionContext().toString());
+        log.info("=========Session 확인=============");
         return new DefaultOAuth2User(Collections.singleton(new SimpleGrantedAuthority(member.getRole().getKey())), attributes.getAttributes(), attributes.getNameAttributeKey());
     }
     
