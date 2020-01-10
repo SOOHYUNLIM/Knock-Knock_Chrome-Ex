@@ -237,7 +237,7 @@ public class RestAPIController {
         });
         totalCode.forEach(code -> result.addAll(codeToData.get(code)));
 
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>( communityCrawlingRepository.findByRegdateBetweenOrderByNoDesc(from, to), HttpStatus.OK);
     }
 
     @GetMapping("/click")
