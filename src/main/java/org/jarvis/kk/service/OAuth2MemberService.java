@@ -45,6 +45,7 @@ public class OAuth2MemberService implements OAuth2UserService<OAuth2UserRequest,
 
         httpSession.setAttribute("member", new SessionMember(member));
         log.info("==================로그인 시 등록되는 세션===========");
+
         log.info(httpSession.getId());
         log.info(httpSession.getSessionContext().toString());
         log.info("=========Session 확인=============");
