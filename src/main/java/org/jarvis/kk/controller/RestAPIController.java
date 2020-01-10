@@ -207,37 +207,37 @@ public class RestAPIController {
 
     @GetMapping("/list")
     public ResponseEntity<List<CommunityCrawling>> getList() {
-        // SessionMember member = (SessionMember) session.getAttribute("member");
-        // Member realMember = memberRepository.findByMIdToInterest(member.getMid()).get();
-        // List<String> totalInterest = new ArrayList<>();
-        // List<String> analysisData = clickHistoryRepository.groupByCategoryCount(realMember);
-        // realMember.getInterests().forEach(interest -> {
-        //     String category = interest.getKeyword();
-        //     totalInterest.add(category);
-        //     analysisData.remove(category);
-        // });
+        SessionMember member = (SessionMember) session.getAttribute("member");
+        Member realMember = memberRepository.findByMIdToInterest(member.getMid()).get();
+        List<String> totalInterest = new ArrayList<>();
+        List<String> analysisData = clickHistoryRepository.groupByCategoryCount(realMember);
+        realMember.getInterests().forEach(interest -> {
+            String category = interest.getKeyword();
+            totalInterest.add(category);
+            analysisData.remove(category);
+        });
 
-        // totalInterest.addAll(analysisData);
+        totalInterest.addAll(analysisData);
 
         LocalDateTime from = LocalDateTime.of(LocalDate.now(), LocalTime.of(0, 0, 0));
         LocalDateTime to = from.plusDays(1L);
-        // List<CommunityCrawling> result = new ArrayList<>();
-        // Map<String, List<CommunityCrawling>> codeToData = new HashMap<>();
-        // this.categories.forEach(category -> codeToData.put(category.getCode(), new ArrayList<>()));
-        // Set<String> totalCode = codeToData.keySet();
-        // communityCrawlingRepository.findByRegdateBetweenOrderByNoDesc(from, to).forEach(data -> {
-        //     if (data.isLastCrawling() && codeToData.values().stream().mapToInt(list -> list.size()).sum() > 20)
-        //         return;
-        //     codeToData.get(data.getProduct().getCategory().getCode()).add(data);
-        // });
+        List<CommunityCrawling> result = new ArrayList<>();
+        Map<String, List<CommunityCrawling>> codeToData = new HashMap<>();
+        this.categories.forEach(category -> codeToData.put(category.getCode(), new ArrayList<>()));
+        Set<String> totalCode = codeToData.keySet();
+        communityCrawlingRepository.findByRegdateBetweenOrderByNoDesc(from, to).forEach(data -> {
+            if (data.isLastCrawling() && codeToData.values().stream().mapToInt(list -> list.size()).sum() > 20)
+                return;
+            codeToData.get(data.getProduct().getCategory().getCode()).add(data);
+        });
 
-        // totalInterest.forEach(code -> {
-        //     result.addAll(codeToData.get(code));
-        //     totalCode.remove(code);
-        // });
-        // totalCode.forEach(code -> result.addAll(codeToData.get(code)));
+        totalInterest.forEach(code -> {
+            result.addAll(codeToData.get(code));
+            totalCode.remove(code);
+        });
+        totalCode.forEach(code -> result.addAll(codeToData.get(code)));
 
-        return new ResponseEntity<>( communityCrawlingRepository.findByRegdateBetweenOrderByNoDesc(from, to), HttpStatus.OK);
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @GetMapping("/click")

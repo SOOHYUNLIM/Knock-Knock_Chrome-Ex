@@ -29,7 +29,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().cors().and().exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint).and().headers()
                 .frameOptions().disable().and().authorizeRequests()
-                .antMatchers("/kk/msg", "/kk/lprice", "/", "/admin/**").permitAll().anyRequest().permitAll().and()
+                .antMatchers("/kk/msg", "/kk/lprice", "/", "/admin/**").permitAll().anyRequest().authenticated().and()
                 .logout().logoutSuccessUrl("/kk/dropToken").logoutSuccessHandler(restAuthenticationLogoutSuccessHandler)
                 .logoutUrl("/kk/logout").invalidateHttpSession(true).permitAll().and().oauth2Login()
                 .successHandler(restAuthenticationLoginSuccessHandler).userInfoEndpoint()
