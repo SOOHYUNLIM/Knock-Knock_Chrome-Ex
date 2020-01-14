@@ -27,7 +27,7 @@ public class Category {
 
     private String keyword;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "tbl_subCategory", joinColumns = @JoinColumn(name="code"))
     private List<SubCategory> subCategorys;
 }
