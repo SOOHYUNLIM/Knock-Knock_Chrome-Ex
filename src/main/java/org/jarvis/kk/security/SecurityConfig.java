@@ -27,7 +27,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint).and().headers()
+        http.csrf().disable().cors().and().exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint).and().headers()
                 .frameOptions().disable().and().authorizeRequests()
                 .antMatchers("/kk/msg", "/kk/lprice", "/", "/admin/**").permitAll().anyRequest().authenticated().and()
                 .logout().logoutSuccessUrl("/kk/dropToken").logoutSuccessHandler(restAuthenticationLogoutSuccessHandler)
