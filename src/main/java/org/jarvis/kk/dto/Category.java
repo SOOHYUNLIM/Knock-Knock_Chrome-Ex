@@ -1,10 +1,13 @@
 package org.jarvis.kk.dto;
 
-import javax.persistence.DiscriminatorColumn;
+import java.util.List;
+
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 
 import lombok.Getter;
@@ -24,7 +27,7 @@ public class Category {
 
     private String keyword;
 
-    // @ElementCollection(fetch = FetchType.LAZY)
-    // @CollectionTable(name = "tbl_subCategory", joinColumns = @JoinColumn(name="code"))
-    // private List<SubCategory> subCategorys;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "tbl_subCategory", joinColumns = @JoinColumn(name="code"))
+    private List<SubCategory> subCategorys;
 }
